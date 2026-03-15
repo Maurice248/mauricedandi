@@ -60,8 +60,12 @@ function createModel() {
 
 export async function summarizeGithubReadme(readmeContent: string) {
   const model = createModel();
-  const structuredModel = model.withStructuredOutput(outputSchema);
+  const structuredModel = bindStructuredOutputToModel(model);
   const runnable = prompt.pipe(structuredModel);
   const report = await runnable.invoke({ readmeContent });
   return report;
+}
+
+function bindStructuredOutputToModel(model: ChatOpenAI) {
+  return model.withStructuredOutput(outputSchema);
 }
