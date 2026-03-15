@@ -15,7 +15,7 @@ type DashboardSidebarProps = {
 
 const primaryItems: NavItem[] = [
   { label: "Overview", href: "/dashboards", active: true },
-  { label: "API Playground", href: "#" },
+  { label: "API Playground", href: "/playground" },
   { label: "Use Cases", href: "#" },
   { label: "Billing", href: "#" },
 ];
