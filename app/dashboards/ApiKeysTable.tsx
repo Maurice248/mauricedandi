@@ -42,6 +42,7 @@ export default function ApiKeysTable({
           <tr className="border-b border-zinc-200 dark:border-zinc-800">
             <th className="px-3 py-2 font-medium">Name</th>
             <th className="px-3 py-2 font-medium">API Key</th>
+            <th className="px-3 py-2 font-medium">Usage</th>
             <th className="px-3 py-2 font-medium">Created</th>
             <th className="px-3 py-2 font-medium">Updated</th>
             <th className="px-3 py-2 font-medium">Actions</th>
@@ -67,6 +68,7 @@ export default function ApiKeysTable({
                   )}
                 </td>
                 <td className="px-3 py-3 align-top font-mono text-xs">{isVisible ? item.key : maskKey(item.key)}</td>
+                <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">{item.usage}</td>
                 <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">
                   {new Date(item.createdAt).toLocaleString()}
                 </td>

@@ -10,6 +10,7 @@ function mapRowToItem(row: ApiKeyRow): ApiKeyItem {
     id: row.id,
     name: row.name,
     key: row.key,
+    usage: row.usage,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -42,7 +42,7 @@ export async function GET() {
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .select("id, name, key, created_at, updated_at")
+    .select("id, name, key, usage, created_at, updated_at")
     .eq("user_id", auth.userId)
     .eq("deleted", false)
     .order("created_at", { ascending: false });
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       name,
       key: generateApiKey(),
     })
-    .select("id, name, key, created_at, updated_at")
+    .select("id, name, key, usage, created_at, updated_at")
     .single();
 
   if (error) {

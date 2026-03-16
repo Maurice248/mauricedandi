@@ -41,7 +41,7 @@ export async function GET(_: Request, { params }: Params) {
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .select("id, name, key, created_at, updated_at")
+    .select("id, name, key, usage, created_at, updated_at")
     .eq("id", id)
     .eq("user_id", auth.userId)
     .eq("deleted", false)
@@ -78,7 +78,7 @@ export async function PATCH(request: Request, { params }: Params) {
     .eq("id", id)
     .eq("user_id", auth.userId)
     .eq("deleted", false)
-    .select("id, name, key, created_at, updated_at")
+    .select("id, name, key, usage, created_at, updated_at")
     .maybeSingle();
 
   if (error) {

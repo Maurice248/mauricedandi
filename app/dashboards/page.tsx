@@ -23,7 +23,10 @@ export default function DashboardPage() {
 
   const { items, error, isLoading, isSubmitting, clearError, createKey, updateKey, removeKey } = useApiKeys();
   const canCreate = useMemo(() => newName.trim().length > 0, [newName]);
-  const usageCredits = useMemo(() => Math.min(items.length * 25, 1000), [items.length]);
+  const usageCredits = useMemo(
+    () => items.reduce((total, item) => total + item.usage, 0),
+    [items],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -250,7 +253,7 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                    Usage increases as you create API keys in this dashboard.
+                    Usage increases each time your API keys are used to call the API.
                   </div>
                 </div>
               </section>

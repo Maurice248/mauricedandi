@@ -17,6 +17,7 @@ create table if not exists public.api_keys (
   user_id uuid references public.users(id) on delete cascade,
   name text not null,
   key text not null unique,
+  usage integer not null default 0,
   deleted boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -27,6 +28,9 @@ add column if not exists deleted boolean not null default false;
 
 alter table public.api_keys
 add column if not exists user_id uuid references public.users(id) on delete cascade;
+
+alter table public.api_keys
+add column if not exists usage integer not null default 0;
 
 create index if not exists api_keys_user_id_idx on public.api_keys(user_id);
 

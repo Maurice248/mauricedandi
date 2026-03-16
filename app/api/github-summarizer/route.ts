@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .select("id")
+    .select("id, usage")
     .eq("key", apiKey)
     .eq("deleted", false)
     .maybeSingle();
@@ -47,6 +47,16 @@ export async function POST(request: Request) {
 
   if (!data) {
     return NextResponse.json({ valid: false, error: "Invalid API key." }, { status: 401 });
+  }
+
+  const { error: usageError } = await supabaseClient
+    .from("api_keys")
+    .update({ usage: (data.usage ?? 0) + 1, updated_at: new Date().toISOString() })
+    .eq("id", data.id)
+    .eq("deleted", false);
+
+  if (usageError) {
+    return NextResponse.json({ valid: false, error: usageError.message }, { status: 500 });
   }
 
   try {
