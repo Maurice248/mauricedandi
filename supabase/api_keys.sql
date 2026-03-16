@@ -14,6 +14,7 @@ create table if not exists public.users (
 
 create table if not exists public.api_keys (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.users(id) on delete cascade,
   name text not null,
   key text not null unique,
   deleted boolean not null default false,
@@ -23,6 +24,11 @@ create table if not exists public.api_keys (
 
 alter table public.api_keys
 add column if not exists deleted boolean not null default false;
+
+alter table public.api_keys
+add column if not exists user_id uuid references public.users(id) on delete cascade;
+
+create index if not exists api_keys_user_id_idx on public.api_keys(user_id);
 
 create or replace function public.set_updated_at()
 returns trigger

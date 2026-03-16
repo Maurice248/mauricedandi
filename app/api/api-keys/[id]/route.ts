@@ -2,16 +2,66 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseClient } from "@/lib/supabaseclient";
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(request: Request, { params }: Params) {
+async function getAuthenticatedUserId() {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.email) {
+    return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  const { data: user, error } = await supabaseClient
+    .from("users")
+    .select("id")
+    .eq("email", session.user.email)
+    .maybeSingle();
+
+  if (error) {
+    return { errorResponse: NextResponse.json({ error: error.message }, { status: 500 }) };
+  }
+
+  if (!user) {
+    return { errorResponse: NextResponse.json({ error: "Authenticated user not found." }, { status: 404 }) };
+  }
+
+  return { userId: user.id };
+}
+
+export async function GET(_: Request, { params }: Params) {
+  const auth = await getAuthenticatedUserId();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
+  }
+
+  const { id } = await params;
+
+  const { data, error } = await supabaseClient
+    .from("api_keys")
+    .select("id, name, key, created_at, updated_at")
+    .eq("id", id)
+    .eq("user_id", auth.userId)
+    .eq("deleted", false)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "API key not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ data });
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+  const auth = await getAuthenticatedUserId();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   const { id } = await params;
@@ -22,10 +72,11 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "API key name is required." }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseClient
     .from("api_keys")
     .update({ name, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .eq("deleted", false)
     .select("id, name, key, created_at, updated_at")
     .maybeSingle();
@@ -42,17 +93,18 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_: Request, { params }: Params) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await getAuthenticatedUserId();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   const { id } = await params;
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabaseClient
     .from("api_keys")
     .update({ deleted: true, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .eq("deleted", false);
 
   if (error) {

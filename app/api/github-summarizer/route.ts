@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseClient } from "@/lib/supabaseclient";
 import { summarizeGithubReadme } from "./chain";
 
 type GithubSummarizerRequest = {
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ valid: false, error: "repoUrl is required." }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseClient
     .from("api_keys")
     .select("id")
     .eq("key", apiKey)

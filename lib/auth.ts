@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseClient } from "@/lib/supabaseclient";
 
 function requiredEnv(name: string) {
   const value = process.env[name];
@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
 
-      const { error } = await supabaseAdmin.from("users").upsert(
+      const { error } = await supabaseClient.from("users").upsert(
         {
           email: user.email,
           name: user.name ?? null,
