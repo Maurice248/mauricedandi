@@ -34,11 +34,11 @@ export async function createApiKey(name: string) {
   return payload.data;
 }
 
-export async function updateApiKey(id: string, name: string) {
+export async function updateApiKey(id: string, name: string, limit: number | null) {
   const response = await fetch(`/api/api-keys/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, limit }),
   });
   const payload = await parsePayload<ApiKeyRow>(response);
 

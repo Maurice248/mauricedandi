@@ -11,6 +11,7 @@ function mapRowToItem(row: ApiKeyRow): ApiKeyItem {
     name: row.name,
     key: row.key,
     usage: row.usage,
+    limit: row.limit_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -56,12 +57,12 @@ export function useApiKeys() {
     }
   }, []);
 
-  const updateKey = useCallback(async (id: string, name: string) => {
+  const updateKey = useCallback(async (id: string, name: string, limit: number | null) => {
     try {
       setIsSubmitting(true);
       setError("");
 
-      const row = await updateApiKey(id, name);
+      const row = await updateApiKey(id, name, limit);
       const updated = mapRowToItem(row);
       setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
       return true;

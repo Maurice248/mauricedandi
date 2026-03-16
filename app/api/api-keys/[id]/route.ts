@@ -41,7 +41,7 @@ export async function GET(_: Request, { params }: Params) {
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .select("id, name, key, usage, created_at, updated_at")
+    .select("id, name, key, usage, limit_count, created_at, updated_at")
     .eq("id", id)
     .eq("user_id", auth.userId)
     .eq("deleted", false)
@@ -65,20 +65,35 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const body = (await request.json()) as { name?: string };
+  const body = (await request.json()) as { name?: string; limit?: number | null };
   const name = body.name?.trim();
+  const limit = body.limit;
 
-  if (!name) {
-    return NextResponse.json({ error: "API key name is required." }, { status: 400 });
+  if (!name && typeof limit === "undefined") {
+    return NextResponse.json({ error: "At least one field (name or limit) is required." }, { status: 400 });
+  }
+
+  if (limit !== null && typeof limit !== "undefined" && (!Number.isInteger(limit) || limit < 0)) {
+    return NextResponse.json({ error: "Limit must be a non-negative integer." }, { status: 400 });
+  }
+
+  const updatePayload: { name?: string; limit_count?: number | null; updated_at: string } = {
+    updated_at: new Date().toISOString(),
+  };
+  if (name) {
+    updatePayload.name = name;
+  }
+  if (typeof limit !== "undefined") {
+    updatePayload.limit_count = limit;
   }
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .update({ name, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq("id", id)
     .eq("user_id", auth.userId)
     .eq("deleted", false)
-    .select("id, name, key, usage, created_at, updated_at")
+    .select("id, name, key, usage, limit_count, created_at, updated_at")
     .maybeSingle();
 
   if (error) {

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabaseClient
     .from("api_keys")
-    .select("id, usage")
+    .select("id, usage, limit_count")
     .eq("key", apiKey)
     .eq("deleted", false)
     .maybeSingle();
@@ -49,9 +49,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ valid: false, error: "Invalid API key." }, { status: 401 });
   }
 
+  const usage = data.usage ?? 0;
+  const limit = data.limit_count;
+  if (typeof limit === "number" && usage >= limit) {
+    return NextResponse.json(
+      {
+        valid: false,
+        error: "API key is already on its limit.",
+        limitReached: true,
+      },
+      { status: 429 },
+    );
+  }
+
   const { error: usageError } = await supabaseClient
     .from("api_keys")
-    .update({ usage: (data.usage ?? 0) + 1, updated_at: new Date().toISOString() })
+    .update({ usage: usage + 1, updated_at: new Date().toISOString() })
     .eq("id", data.id)
     .eq("deleted", false);
 

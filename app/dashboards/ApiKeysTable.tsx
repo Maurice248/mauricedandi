@@ -1,3 +1,5 @@
+import { InfinityIcon } from "lucide-react";
+
 import IconButton from "./IconButton";
 import type { ApiKeyItem } from "./types";
 
@@ -5,12 +7,14 @@ type ApiKeysTableProps = {
   items: ApiKeyItem[];
   editingId: string | null;
   editingName: string;
+  editingLimit: string;
   isSubmitting: boolean;
   visibleKeys: Record<string, boolean>;
   onStartEditing: (item: ApiKeyItem) => void;
   onCancelEditing: () => void;
   onSaveEditing: (id: string) => void;
   onEditingNameChange: (value: string) => void;
+  onEditingLimitChange: (value: string) => void;
   onToggleVisibility: (id: string) => void;
   onCopyKey: (key: string) => void;
   onDeleteItem: (id: string) => void;
@@ -25,12 +29,14 @@ export default function ApiKeysTable({
   items,
   editingId,
   editingName,
+  editingLimit,
   isSubmitting,
   visibleKeys,
   onStartEditing,
   onCancelEditing,
   onSaveEditing,
   onEditingNameChange,
+  onEditingLimitChange,
   onToggleVisibility,
   onCopyKey,
   onDeleteItem,
@@ -43,6 +49,7 @@ export default function ApiKeysTable({
             <th className="px-3 py-2 font-medium">Name</th>
             <th className="px-3 py-2 font-medium">API Key</th>
             <th className="px-3 py-2 font-medium">Usage</th>
+            <th className="px-3 py-2 font-medium">Limit</th>
             <th className="px-3 py-2 font-medium">Created</th>
             <th className="px-3 py-2 font-medium">Updated</th>
             <th className="px-3 py-2 font-medium">Actions</th>
@@ -70,6 +77,26 @@ export default function ApiKeysTable({
                 <td className="px-3 py-3 align-top font-mono text-xs">{isVisible ? item.key : maskKey(item.key)}</td>
                 <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">{item.usage}</td>
                 <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={editingLimit}
+                      onChange={(event) => onEditingLimitChange(event.target.value)}
+                      className="w-24 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
+                    />
+                  ) : (
+                    item.limit === null ? (
+                      <span className="inline-flex items-center text-zinc-600 dark:text-zinc-400" title="No limit">
+                        <InfinityIcon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                    ) : (
+                      <span>{item.limit}</span>
+                    )
+                  )}
+                </td>
+                <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">
                   {new Date(item.createdAt).toLocaleString()}
                 </td>
                 <td className="px-3 py-3 align-top text-zinc-600 dark:text-zinc-400">
@@ -79,7 +106,11 @@ export default function ApiKeysTable({
                   <div className="flex flex-wrap gap-2">
                     {isEditing ? (
                       <>
-                        <IconButton label="Save" onClick={() => onSaveEditing(item.id)} disabled={!editingName.trim() || isSubmitting}>
+                        <IconButton
+                          label="Save"
+                          onClick={() => onSaveEditing(item.id)}
+                          disabled={!editingName.trim() || (editingLimit.trim().length > 0 && !/^\d+$/.test(editingLimit)) || isSubmitting}
+                        >
                           <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
                             <path
                               d="M4.5 10.5L8.2 14.2L15.5 5.8"

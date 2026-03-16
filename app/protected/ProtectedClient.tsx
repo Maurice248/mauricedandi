@@ -33,11 +33,19 @@ export default function ProtectedClient({ submittedKey }: ProtectedClientProps) 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKey: submittedKey }),
         });
-        const payload = (await response.json()) as { valid?: boolean };
+        const payload = (await response.json()) as {
+          valid?: boolean;
+          limitReached?: boolean;
+          message?: string;
+        };
         const valid = Boolean(payload.valid);
 
         if (!isMounted) return;
         setIsValid(valid);
+        if (payload.limitReached) {
+          setToast({ tone: "error", message: payload.message || "API key is already on its limit." });
+          return;
+        }
         setToast(
           valid
             ? { tone: "success", message: "valid API key, /protected can be accessed" }
@@ -90,7 +98,7 @@ export default function ProtectedClient({ submittedKey }: ProtectedClientProps) 
             </p>
           ) : (
             <p className="text-sm font-medium text-red-600 dark:text-red-400">
-              Access denied. The provided API key is invalid.
+              Access denied. The provided API key is invalid or has reached its usage limit.
             </p>
           )}
         </section>

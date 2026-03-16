@@ -18,6 +18,7 @@ create table if not exists public.api_keys (
   name text not null,
   key text not null unique,
   usage integer not null default 0,
+  limit_count integer,
   deleted boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -31,6 +32,15 @@ add column if not exists user_id uuid references public.users(id) on delete casc
 
 alter table public.api_keys
 add column if not exists usage integer not null default 0;
+
+alter table public.api_keys
+add column if not exists limit_count integer;
+
+alter table public.api_keys
+alter column limit_count drop not null;
+
+alter table public.api_keys
+alter column limit_count drop default;
 
 create index if not exists api_keys_user_id_idx on public.api_keys(user_id);
 

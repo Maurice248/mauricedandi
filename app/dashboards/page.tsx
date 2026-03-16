@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [editingLimit, setEditingLimit] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
   const toastTimeoutRef = useRef<number | null>(null);
 
@@ -87,19 +88,23 @@ export default function DashboardPage() {
   const startEditing = (item: ApiKeyItem) => {
     setEditingId(item.id);
     setEditingName(item.name);
+    setEditingLimit(item.limit === null ? "" : String(item.limit));
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditingName("");
+    setEditingLimit("");
   };
 
   const saveEditing = async (id: string) => {
     const trimmed = editingName.trim();
-    if (!trimmed) {
+    const hasLimit = editingLimit.trim().length > 0;
+    const parsedLimit = Number.parseInt(editingLimit, 10);
+    if (!trimmed || (hasLimit && (Number.isNaN(parsedLimit) || parsedLimit < 0))) {
       return;
     }
-    const updated = await updateKey(id, trimmed);
+    const updated = await updateKey(id, trimmed, hasLimit ? parsedLimit : null);
     if (updated) {
       cancelEditing();
       showToast({ tone: "success", message: "API Key updated successfully" });
@@ -304,12 +309,14 @@ export default function DashboardPage() {
                     items={items}
                     editingId={editingId}
                     editingName={editingName}
+                    editingLimit={editingLimit}
                     isSubmitting={isSubmitting}
                     visibleKeys={visibleKeys}
                     onStartEditing={startEditing}
                     onCancelEditing={cancelEditing}
                     onSaveEditing={saveEditing}
                     onEditingNameChange={setEditingName}
+                    onEditingLimitChange={setEditingLimit}
                     onToggleVisibility={toggleVisibility}
                     onCopyKey={copyKey}
                     onDeleteItem={deleteItem}
