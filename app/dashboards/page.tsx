@@ -10,6 +10,8 @@ import type { ApiKeyItem, ToastState } from "./types";
 import { useApiKeys } from "./useApiKeys";
 
 export default function DashboardPage() {
+  const [isAuthResolved, setIsAuthResolved] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [nameError, setNameError] = useState("");
@@ -22,6 +24,35 @@ export default function DashboardPage() {
   const { items, error, isLoading, isSubmitting, clearError, createKey, updateKey, removeKey } = useApiKeys();
   const canCreate = useMemo(() => newName.trim().length > 0, [newName]);
   const usageCredits = useMemo(() => Math.min(items.length * 25, 1000), [items.length]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session", { method: "GET" });
+        const session = (await response.json()) as { user?: { email?: string } };
+        if (!isMounted) return;
+
+        if (session?.user?.email) {
+          setIsAuthorized(true);
+          setIsAuthResolved(true);
+          return;
+        }
+
+        window.location.href = "/api/auth/signin?callbackUrl=/dashboards";
+      } catch {
+        if (!isMounted) return;
+        window.location.href = "/api/auth/signin?callbackUrl=/dashboards";
+      }
+    };
+
+    void checkSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const showToast = (nextToast: ToastState) => {
     setToast(nextToast);
@@ -131,6 +162,14 @@ export default function DashboardPage() {
       document.body.style.overflow = "";
     };
   }, [isSidebarOpen]);
+
+  if (!isAuthResolved || !isAuthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-6 py-10 text-zinc-900 dark:bg-black dark:text-zinc-50">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Checking your session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 px-6 py-10 text-zinc-900 dark:bg-black dark:text-zinc-50">
