@@ -1,6 +1,8 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
 function requiredEnv(name: string) {
   const value = process.env[name];
   if (!value) {
@@ -18,6 +20,32 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      if (!user.email) {
+        console.error("[next-auth][signIn] Missing email for authenticated user.");
+        return true;
+      }
+
+      const { error } = await supabaseAdmin.from("users").upsert(
+        {
+          email: user.email,
+          name: user.name ?? null,
+          image: user.image ?? null,
+          provider: account?.provider ?? "google",
+          provider_account_id: account?.providerAccountId ?? null,
+          last_sign_in_at: new Date().toISOString(),
+        },
+        { onConflict: "email" },
+      );
+
+      if (error) {
+        console.error("[next-auth][signIn] Failed to upsert user in Supabase:", error.message);
+      }
+
+      return true;
+    },
   },
   debug: process.env.NODE_ENV === "development",
   logger: {
